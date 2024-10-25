@@ -5,7 +5,7 @@ import re
 import telebot
 from telebot import types
 
-bot = telebot.TeleBot('7710773422:AAF428D9QNrn6-INNN_B_aSXVvzEVMq47UA')
+bot = telebot.TeleBot('')
 
 schedule = []
 days = []
