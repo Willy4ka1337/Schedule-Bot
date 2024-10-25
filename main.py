@@ -26,7 +26,6 @@ class MyHTMLParser(HTMLParser):
     subject = ""
     teacher = ""
     classroom = ""
-    isNone = False
     def handle_starttag(self, tag, attrs):
         if tag == 'a':
             self.reading = True
