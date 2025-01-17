@@ -118,13 +118,7 @@ def print_string(date):
     result_string = f"Расписание на {date} \n"
     for i in schedule:
         if(len(i[1]) > 1):
-            string = f"{numbers[i[0]-1]} Пара\n\
-⏰ Время: {times[i[0]-1][0]} - {times[i[0]-1][1]}\n\
-{not check_old_site and (i[4] > 0 and f'💀 Подгруппа: {str(i[4])}\n' or '') or ''}\
-{i[1] and f'📚 <b>Дисциплина: {i[1]}</b>\n' or ''}\
-{i[2] and f'👤 Преподаватель: {i[2]}\n' or ''}\
-{i[3] and f'🏛️ Кабинет: {i[3]}\n' or ''}\
-"
+            string = f"{numbers[i[0]-1]} Пара\n⏰ Время: {times[i[0]-1][0]} - {times[i[0]-1][1]}\n{not check_old_site and (i[4] > 0 and f'💀 Подгруппа: {str(i[4])}\n' or '') or ''}{i[1] and f'📚 <b>Дисциплина: {i[1]}</b>\n' or ''}{i[2] and f'👤 Преподаватель: {i[2]}\n' or ''}{i[3] and f'🏛️ Кабинет: {i[3]}\n' or ''}"
             
             result_string = f"{result_string}\n{string}"
     return result_string
