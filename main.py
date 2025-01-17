@@ -9,17 +9,12 @@ import locale
 from lxml import etree
 import psycopg2
 
-connection = psycopg2.connect(
-    dbname="schedule_bt89",
-    user="root",
-    password="S1k6aChqPHEnzHEYUWmEliHE1Zxf2430",
-    host="dpg-cu57ei9u0jms73ffn9g0-a",
-    port="5432",
-)
+global connection
+connection = psycopg2.connect("postgresql://root:S1k6aChqPHEnzHEYUWmEliHE1Zxf2430@dpg-cu57ei9u0jms73ffn9g0-a.oregon-postgres.render.com/schedule_bt89")
 cursor = connection.cursor()
 
 locale.setlocale(locale.LC_ALL, '')
-bot = telebot.TeleBot('7460665722:AAHoum36rIGL3sovFiG0vdJ_oJ-fdt6VgTQ')
+bot = telebot.TeleBot('7460665722:AAHsE1SLqF_fAWh86uBC2m6sHiXoNMPLWb8')
 
 schedule = []
 days = []
@@ -166,7 +161,7 @@ def start(message):
         showSelect()
 
     print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - show start message")
-    query(f"INSERT INTO 'schedule_log' ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'show start message')")
+    query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'show start message')")
 
 @bot.message_handler(commands = ['switchsite'])
 def switchsite(message):
@@ -178,7 +173,7 @@ def switchsite(message):
     bot.send_message(message.from_user.id, f"Теперь бот использует {check_old_site and 'старый' or 'новый'} сайт")
 
     print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - switch site")
-    query(f"INSERT INTO 'schedule_log' ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'switch site')")
+    query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'switch site')")
 @bot.message_handler(commands = ['checksite'])
 def checksite(message):
     if(tech_jobs and message.from_user.id != 5613054609):
@@ -188,7 +183,7 @@ def checksite(message):
     bot.send_message(message.from_user.id, f"Бот использует {check_old_site and 'старый' or 'новый'} сайт")
 
     print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - check site")
-    query(f"INSERT INTO 'schedule_log' ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'check site')")
+    query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'check site')")
 
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
@@ -214,7 +209,7 @@ def get_text_messages(message):
                 bot.send_message(message.from_user.id, 'Выберите дату', reply_markup=keyboard)
 
                 print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - show days")
-                query(f"INSERT INTO 'schedule_log' ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'show days')")
+                query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'show days')")
 
                 clearData()
         else:
@@ -243,7 +238,7 @@ def get_text_messages(message):
                 date = datetime(int(year), int(month), int(day)).strftime('%A, %d.%m.%Y')
                 bot.send_message(message.from_user.id, print_string(date), parse_mode="HTML", reply_markup=markup)
                 print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - input date")
-                query(f"INSERT INTO 'schedule_log' ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'input date')")
+                query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'input date')")
 
                 clearData()
         else:
@@ -269,7 +264,7 @@ def callback_day(call):
         bot.send_message(call.message.chat.id, f"👍Ты успешно выбрал(-а) свою группу.\n👌Нажми на кнопку \"Посмотреть расписание\", или введи дату.\nПример: {current_date}", reply_markup=markup)
         
         print(f"[{getCurrentTime()}] user: {call.message.chat.username} (id: {call.message.chat.id}) - select group")
-        query(f"INSERT INTO 'schedule_log' ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{call.message.chat.username}', '{call.message.chat.id}', 'select group')")
+        query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{call.message.chat.username}', '{call.message.chat.id}', 'select group')")
     else:
         rows = checkGroup(call.message.chat)
         markup = addMainButtons()
@@ -302,7 +297,7 @@ def callback_day(call):
                         selectNewGroup(call.message.chat)
 
                 print(f"[{getCurrentTime()}] user: {call.message.chat.username} (id: {call.message.chat.id}) - select day")
-                query(f"INSERT INTO 'schedule_log' ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{call.message.chat.username}', '{call.message.chat.id}', 'select day')")
+                query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{call.message.chat.username}', '{call.message.chat.id}', 'select day')")
         else:
             bot.send_message(call.message.chat.id, 'Вы еще не выбрали группу.')
 
