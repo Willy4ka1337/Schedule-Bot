@@ -8,16 +8,14 @@ import locale
 # import mysql.connector as mysql
 from lxml import etree
 import psycopg2
-import http.server
-import socketserver
+import socket
 
-PORT = 5129
-
-Handler = http.server.SimpleHTTPRequestHandler
-
-with socketserver.TCPServer(("54.191.253.12", PORT), Handler) as httpd:
-    print("serving at port", PORT)
-    httpd.serve_forever()
+import socket
+server = socket.socket() 
+server.bind(("54.191.253.12", 13379))
+server.listen(4) 
+client_socket, client_address = server.accept()
+print(client_address, "has connected")
 
 global connection
 connection = psycopg2.connect("postgresql://root:S1k6aChqPHEnzHEYUWmEliHE1Zxf2430@dpg-cu57ei9u0jms73ffn9g0-a/schedule_bt89")
