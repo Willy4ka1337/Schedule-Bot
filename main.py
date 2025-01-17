@@ -12,9 +12,9 @@ import psycopg2
 connection = psycopg2.connect(
     dbname="schedule_bt89",
     user="root",
-    password="password",
-    host="S1k6aChqPHEnzHEYUWmEliHE1Zxf2430",
-    port="5432"
+    password="S1k6aChqPHEnzHEYUWmEliHE1Zxf2430",
+    host="dpg-cu57ei9u0jms73ffn9g0-a",
+    port="5432",
 )
 cursor = connection.cursor()
 
