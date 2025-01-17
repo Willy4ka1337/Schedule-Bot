@@ -11,7 +11,7 @@ import psycopg2
 import http.server
 import socketserver
 
-PORT = 1337
+PORT = 7452
 
 Handler = http.server.SimpleHTTPRequestHandler
 
