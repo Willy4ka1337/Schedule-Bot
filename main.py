@@ -123,7 +123,8 @@ def print_string(date):
 {not check_old_site and (i[4] > 0 and f'💀 Подгруппа: {str(i[4])}\n' or '') or ''}\
 {i[1] and f'📚 <b>Дисциплина: {i[1]}</b>\n' or ''}\
 {i[2] and f'👤 Преподаватель: {i[2]}\n' or ''}\
-{i[3] and f'🏛️ Кабинет: {i[3]}\n' or ''}"
+{i[3] and f'🏛️ Кабинет: {i[3]}\n' or ''}\
+"
             
             result_string = f"{result_string}\n{string}"
     return result_string
