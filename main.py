@@ -35,9 +35,9 @@ times = [
 numbers = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣']
 groups = []
 
-tech_jobs = False
+tech_jobs = True
 
-check_old_site = False
+check_old_site = True
 
 class MyHTMLParser(HTMLParser):
     reading = False
@@ -118,8 +118,17 @@ def print_string(date):
     result_string = f"Расписание на {date} \n"
     for i in schedule:
         if(len(i[1]) > 1):
-            string = f"{numbers[i[0]-1]} Пара\n⏰ Время: {times[i[0]-1][0]} - {times[i[0]-1][1]}\n{not check_old_site and (i[4] > 0 and f'💀 Подгруппа: {str(i[4])}\n' or '') or ''}{i[1] and f'📚 <b>Дисциплина: {i[1]}</b>\n' or ''}{i[2] and f'👤 Преподаватель: {i[2]}\n' or ''}{i[3] and f'🏛️ Кабинет: {i[3]}\n' or ''}"
-            
+            string = f"{numbers[i[0]-1]} Пара\n\
+⏰ Время: {times[i[0]-1][0]} - {times[i[0]-1][1]}\n"
+            if(not check_old_site):
+                if(i[4] > 0):
+                    string += f"💀 Подгруппа: {str(i[4])}\n"
+            if(len(i[1])>0):
+                string += f"📚 <b>Дисциплина: {i[1]}</b>\n"
+            if(len(i[2])>0):
+                string += f"👤 Преподаватель: {i[2]}\n"
+            if(len(i[3])>0):
+                string += f"🏛️ Кабинет: {i[3]}\n"
             result_string = f"{result_string}\n{string}"
     return result_string
 
