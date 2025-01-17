@@ -260,9 +260,9 @@ def callback_day(call):
         gid = text[13:]
         rows = rows = checkGroup(call.message.chat)
         if(rows):
-            query(f"UPDATE 'schedule_users' SET '{check_old_site and 'group_id' or 'group_string'}'='{gid}' WHERE 'telegram_id'='{call.message.chat.id}'")
+            query(f"UPDATE schedule_users SET '{check_old_site and 'group_id' or 'group_string'}'='{gid}' WHERE 'telegram_id'='{call.message.chat.id}'")
         else:
-            query(f"INSERT INTO 'schedule_users' ('telegram_id', '{check_old_site and 'group_id' or 'group_string'}', 'user_name') VALUES ('{call.message.chat.id}', '{gid}', '{call.message.chat.username}')")
+            query(f"INSERT INTO schedule_users ('telegram_id', '{check_old_site and 'group_id' or 'group_string'}', 'user_name') VALUES ('{call.message.chat.id}', '{gid}', '{call.message.chat.username}')")
 
         current_date = datetime.now().strftime('%d.%m.%Y')
         markup = addMainButtons()
@@ -313,7 +313,7 @@ def query(request):
     connection.commit()
 
 def checkGroup(message):
-    request = f"SELECT '{check_old_site and 'group_id' or 'group_string'}' FROM 'schedule_users' WHERE 'telegram_id' = '{message.id}'"
+    request = f"SELECT '{check_old_site and 'group_id' or 'group_string'}' FROM schedule_users WHERE 'telegram_id' = '{message.id}'"
     cursor.execute(request)
     rows = cursor.fetchall()
     return rows
