@@ -42,7 +42,6 @@ class MyHTMLParser(HTMLParser):
     teacher = ""
     classroom = ""
     def handle_starttag(self, tag, attrs):
-        # print(f"handle_starttag {tag}")
         if check_old_site:
             if tag == 'a':
                 self.reading = True
@@ -65,7 +64,6 @@ class MyHTMLParser(HTMLParser):
                         groups.append([attr[1], attr[1]])
 
     def handle_endtag(self, tag):
-        # print(f"handle_endtag {tag}")
         if self.reading:
             if check_old_site:
                 if tag == 'a':
@@ -81,7 +79,6 @@ class MyHTMLParser(HTMLParser):
                     self.reading = False
 
     def handle_data(self, data):
-        # print(f"handle_data {data}")
         if self.reading:
             if self.readType == 0:
                 if check_old_site:
@@ -153,7 +150,7 @@ def start(message):
             else:
                 showSelect()
         else:
-            if(len(rows[0][0]) > 0):
+            if(len(str(rows[0][0])) > 0):
                 showH()
             else:
                 showSelect()
@@ -161,7 +158,7 @@ def start(message):
         showSelect()
 
     print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - show start message")
-    query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'show start message')")
+    query(f'INSERT INTO schedule_log ("time", "name", "telegram_id", "log") VALUES (NOW(), \'{message.from_user.username}\', \'{message.from_user.id}\', \'show start message\')')
 
 @bot.message_handler(commands = ['switchsite'])
 def switchsite(message):
@@ -173,7 +170,8 @@ def switchsite(message):
     bot.send_message(message.from_user.id, f"Теперь бот использует {check_old_site and 'старый' or 'новый'} сайт")
 
     print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - switch site")
-    query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'switch site')")
+    query(f'INSERT INTO schedule_log ("time", "name", "telegram_id", "log") VALUES (NOW(), \'{message.from_user.username}\', \'{message.from_user.id}\', \'switch site\')')
+
 @bot.message_handler(commands = ['checksite'])
 def checksite(message):
     if(tech_jobs and message.from_user.id != 5613054609):
@@ -183,7 +181,7 @@ def checksite(message):
     bot.send_message(message.from_user.id, f"Бот использует {check_old_site and 'старый' or 'новый'} сайт")
 
     print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - check site")
-    query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'check site')")
+    query(f'INSERT INTO schedule_log ("time", "name", "telegram_id", "log") VALUES (NOW(), \'{message.from_user.username}\', \'{message.from_user.id}\', \'check site\')')
 
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
@@ -209,7 +207,7 @@ def get_text_messages(message):
                 bot.send_message(message.from_user.id, 'Выберите дату', reply_markup=keyboard)
 
                 print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - show days")
-                query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'show days')")
+                query(f'INSERT INTO schedule_log ("time", "name", "telegram_id", "log") VALUES (NOW(), \'{message.from_user.username}\', \'{message.from_user.id}\', \'show days\')')
 
                 clearData()
         else:
@@ -238,7 +236,7 @@ def get_text_messages(message):
                 date = datetime(int(year), int(month), int(day)).strftime('%A, %d.%m.%Y')
                 bot.send_message(message.from_user.id, print_string(date), parse_mode="HTML", reply_markup=markup)
                 print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - input date")
-                query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'input date')")
+                query(f'INSERT INTO schedule_log ("time", "name", "telegram_id", "log") VALUES (NOW(), \'{message.from_user.username}\', \'{message.from_user.id}\', \'input date\')')
 
                 clearData()
         else:
@@ -255,16 +253,16 @@ def callback_day(call):
         gid = text[13:]
         rows = rows = checkGroup(call.message.chat)
         if(rows):
-            query(f"UPDATE schedule_users SET '{check_old_site and 'group_id' or 'group_string'}'='{gid}' WHERE 'telegram_id'='{call.message.chat.id}'")
+            query(f'UPDATE schedule_users SET "{check_old_site and "group_id" or "group_string"}"=\'{gid}\' WHERE "telegram_id"=\'{call.message.chat.id}\'')
         else:
-            query(f"INSERT INTO schedule_users ('telegram_id', '{check_old_site and 'group_id' or 'group_string'}', 'user_name') VALUES ('{call.message.chat.id}', '{gid}', '{call.message.chat.username}')")
+            query(f'INSERT INTO schedule_users ("telegram_id", "{check_old_site and "group_id" or "group_string"}", "user_name") VALUES (\'{call.message.chat.id}\', \'{gid}\', \'{call.message.chat.username}\')')
 
         current_date = datetime.now().strftime('%d.%m.%Y')
         markup = addMainButtons()
         bot.send_message(call.message.chat.id, f"👍Ты успешно выбрал(-а) свою группу.\n👌Нажми на кнопку \"Посмотреть расписание\", или введи дату.\nПример: {current_date}", reply_markup=markup)
         
         print(f"[{getCurrentTime()}] user: {call.message.chat.username} (id: {call.message.chat.id}) - select group")
-        query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{call.message.chat.username}', '{call.message.chat.id}', 'select group')")
+        query(f'INSERT INTO schedule_log ("time", "name", "telegram_id", "log") VALUES (NOW(), \'{call.message.chat.username}\', \'{call.message.chat.id}\', \'select group\')')
     else:
         rows = checkGroup(call.message.chat)
         markup = addMainButtons()
@@ -297,7 +295,7 @@ def callback_day(call):
                         selectNewGroup(call.message.chat)
 
                 print(f"[{getCurrentTime()}] user: {call.message.chat.username} (id: {call.message.chat.id}) - select day")
-                query(f"INSERT INTO schedule_log ('time', 'name', 'telegram_id', 'log') VALUES (NOW(), '{call.message.chat.username}', '{call.message.chat.id}', 'select day')")
+                query(f'INSERT INTO schedule_log ("time", "name", "telegram_id", "log") VALUES (NOW(), \'{call.message.chat.username}\', \'{call.message.chat.id}\', \'select day\')')
         else:
             bot.send_message(call.message.chat.id, 'Вы еще не выбрали группу.')
 
@@ -308,7 +306,7 @@ def query(request):
     connection.commit()
 
 def checkGroup(message):
-    request = f"SELECT '{check_old_site and 'group_id' or 'group_string'}' FROM schedule_users WHERE 'telegram_id' = '{message.id}'"
+    request = f'SELECT "{check_old_site and "group_id" or "group_string"}" FROM schedule_users WHERE "telegram_id" = \'{message.id}\''
     cursor.execute(request)
     rows = cursor.fetchall()
     return rows
