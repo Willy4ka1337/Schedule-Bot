@@ -11,11 +11,11 @@ import psycopg2
 import http.server
 import socketserver
 
-PORT = 7452
+PORT = 5129
 
 Handler = http.server.SimpleHTTPRequestHandler
 
-with socketserver.TCPServer(("52.41.36.82", PORT), Handler) as httpd:
+with socketserver.TCPServer(("54.191.253.12", PORT), Handler) as httpd:
     print("serving at port", PORT)
     httpd.serve_forever()
 
