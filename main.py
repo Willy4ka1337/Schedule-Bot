@@ -12,7 +12,7 @@ import socket
 
 import socket
 server = socket.socket() 
-server.bind(("54.191.253.12", 40812))
+server.bind(("44.226.122.3", 40812))
 server.listen(4) 
 client_socket, client_address = server.accept()
 print(client_address, "has connected")
