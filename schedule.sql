@@ -912,7 +912,7 @@ INSERT INTO `schedule_users` (`id`, `telegram_id`, `group_id`, `group_string`, `
 (12, 5613054609, 54, 'Веб-232', 'SchizophreniaCP1251'),
 (13, 794717108, 54, 'Веб-232', 'THE_KingOFdarknesss'),
 (14, 5181201512, 54, '', 'None'),
-(15, 1297121303, 54, '54', 'sani_sang'),
+(15, 1297121303, 54, 'Веб-232', 'sani_sang'),
 (16, 1228386815, 54, '', 'ksusger'),
 (17, 987653493, 54, '', 'white_overdose'),
 (18, 1300548521, 54, '', 'motyatd'),
