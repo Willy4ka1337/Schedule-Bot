@@ -8,11 +8,10 @@ import locale
 # import mysql.connector as mysql
 from lxml import etree
 import psycopg2
-import socket
 
 import socket
 server = socket.socket() 
-server.bind(("0.0.0.0", 40812))
+server.bind(("", 40812))
 server.listen(4) 
 client_socket, client_address = server.accept()
 print(client_address, "has connected")
