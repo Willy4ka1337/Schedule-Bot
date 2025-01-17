@@ -5,14 +5,17 @@ import re
 import telebot
 from telebot import types
 import locale
-import time
 import mysql.connector as mysql
-
+from lxml import etree
 connection = mysql.connect(
     host='localhost',
     user='root',
     password='',
     database='schedule'
+    # host='localhost',
+    # user='a1074202_schedule',
+    # password='x4nJVFx4YsyPkVL',
+    # database='a1074202_schedule'
 )
 cursor = connection.cursor()
 
@@ -34,6 +37,8 @@ groups = []
 
 tech_jobs = False
 
+check_old_site = False
+
 class MyHTMLParser(HTMLParser):
     reading = False
     gid = 0
@@ -43,33 +48,57 @@ class MyHTMLParser(HTMLParser):
     teacher = ""
     classroom = ""
     def handle_starttag(self, tag, attrs):
-        if tag == 'a':
-            self.reading = True
-            self.readType = 0
-            for attr in attrs:
-                m = re.search(r'/site/schedule\?group_id=[0-9]+&day=.+&onlyMine=', attr[1])
-                if(m):
-                    self.gid = m.group(0).replace('/site/schedule?group_id=', '')
-                    self.gid = int(self.gid[:2])
-        elif tag == 'tr':
-            self.reading = True
-            self.readType = 1
+        # print(f"handle_starttag {tag}")
+        if check_old_site:
+            if tag == 'a':
+                self.reading = True
+                self.readType = 0
+                for attr in attrs:
+                    m = re.search(r'/site/schedule\?group_id=[0-9]+&day=.+', attr[1])
+                    if(m):
+                        self.gid = m.group(0).replace('/site/schedule?group_id=', '')
+                        self.gid = int(self.gid[:2])
+            elif tag == 'tr':
+                self.reading = True
+                self.readType = 1
+        else:
+            if tag == 'button':
+                for attr in attrs:
+                    if attr[1] == 'dateFiel1':
+                        self.reading = True
+                        self.readType = 0
+                    if attr[1] != "Group":
+                        groups.append([attr[1], attr[1]])
 
     def handle_endtag(self, tag):
-        if tag == 'a':
-            self.reading = False
-        elif tag == 'tr':
-            self.reading = False
-            self.readType = 1
-            schedule.append([self.key, self.subject, self.teacher, self.classroom])
+        # print(f"handle_endtag {tag}")
+        if self.reading:
+            if check_old_site:
+                if tag == 'a':
+                    self.reading = False
+                elif tag == 'tr':
+                    self.reading = False
+                    self.readType = 1
+                    schedule.append([self.key, self.subject, self.teacher, self.classroom])
+            else:
+                if tag == 'button':
+                    self.reading = False
+                elif tag == 'h5':
+                    self.reading = False
 
     def handle_data(self, data):
+        # print(f"handle_data {data}")
         if self.reading:
             if self.readType == 0:
-                if(re.search(r'^\s*[А-Я]+[а-я]*\s[0-9]+$', data)):
-                    groups.append([self.gid, data])
-                elif(re.search(r"^\D{2}\s*\d{2}\.\d{2}\.\d{4}$", data)):
-                    days.append(data)
+                if check_old_site:
+                    if(re.search(r'^\s*[А-Я]+[а-я]*\s[0-9]+$', data)):
+                        groups.append([self.gid, data])
+                    elif(re.search(r"^\D{2}\s*\d{2}\.\d{2}\.\d{4}$", data)):
+                        days.append(data)
+                else:
+                    print(f"reading {data}")
+                    if(re.search(r"^\s*\d{4}.\d{2}\.\d{2}$", data)):
+                        days.append(data)
             elif self.readType == 1:
                 if data != '-':
                     if re.search(r"^\d{1}$", data):
@@ -91,7 +120,8 @@ def print_string(date):
         if(len(i[1]) > 1):
             string = f"{numbers[i[0]-1]} Пара\n\
 ⏰ Время: {times[i[0]-1][0]} - {times[i[0]-1][1]}\n\
-{i[1] and f'📚 <b>Предмет: {i[1]}</b>\n' or ''}\
+{not check_old_site and (i[4] > 0 and f'💀 Подгруппа: {str(i[4])}\n' or '') or ''}\
+{i[1] and f'📚 <b>Дисциплина: {i[1]}</b>\n' or ''}\
 {i[2] and f'👤 Преподаватель: {i[2]}\n' or ''}\
 {i[3] and f'🏛️ Кабинет: {i[3]}\n' or ''}"
             
@@ -103,168 +133,118 @@ def start(message):
     if(tech_jobs and message.from_user.id != 5613054609):
         return bot.send_message(message.from_user.id, f"Бот временно на тех. работах, подождите пожалуйста")
         
-    schedule.clear()
-    days.clear()
-    groups.clear()
-    current_date = datetime.now().strftime('%d.%m.%Y')
-    response = requests.get(f'https://journal.zifra42.ru/site/schedule?group_id=0&day={current_date}&onlyMine=')
-    parser = MyHTMLParser()
-    parser.feed(response.text)
+    clearData()
+    getGroupList()
 
-    # SQL Request
-    
-    request = f"SELECT `group_id` FROM `schedule_users` WHERE `telegram_id` = '{message.from_user.id}'"
-    cursor.execute(request)
-    rows = cursor.fetchall()
+    rows = checkGroup(message.from_user)
 
     current_date = datetime.now().strftime('%d.%m.%Y')
 
-    if(rows):
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        btn1 = types.KeyboardButton("Посмотреть расписание")
-        btn2 = types.KeyboardButton("Изменить группу")
-        markup.add(btn1, btn2)
+    def showH():
+        markup = addMainButtons()
         bot.send_message(message.from_user.id, f"👋Привет! Это бот для просмотра расписания!\n👌Нажми кнопку \"Посмотреть расписание\" или введи дату.\nПример: {current_date}", reply_markup=markup)
-    else:
-        keyboard = types.InlineKeyboardMarkup()
-        btns_in_row = 3
-        keyboard.row_width = btns_in_row
-        btn_count = len(groups)
-        btn_list = []
-        for i in range(0, btn_count, 3):
-            btn_list = []
-            for n in range(3):
-                if(i+n >= btn_count):
-                    break
-                btn = types.InlineKeyboardButton(groups[i+n][1], callback_data = f"select group {groups[i+n][0]}")
-                btn_list.append(btn)
-            keyboard.row(*btn_list)
+
+    def showSelect():
+        keyboard = buttonGroups()
         bot.send_message(message.from_user.id, "👋Привет! Это бот для просмотра расписания. \n🎓Сейчас тебе нужно выбрать свою группу.\n☺️Для этого нажми соответствующую кнопку ниже.", reply_markup=keyboard)
 
-    ccurrent_date = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+    if(rows):
+        if(check_old_site):
+            if(rows[0][0] > 0):
+                showH()
+            else:
+                showSelect()
+        else:
+            if(len(rows[0][0]) > 0):
+                showH()
+            else:
+                showSelect()
+    else:
+        showSelect()
 
-    print(f"[{ccurrent_date}] user: {message.from_user.username} (id: {message.from_user.id}) - show start message")
+    print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - show start message")
     query(f"INSERT INTO `schedule_log` (`time`, `name`, `telegram_id`, `log`) VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'show start message')")
+
+@bot.message_handler(commands = ['switchsite'])
+def switchsite(message):
+    if(message.from_user.id != 5613054609):
+        return bot.send_message(message.from_user.id, f"Команда доступна только администратору")
+    
+    global check_old_site
+    check_old_site = not check_old_site
+    bot.send_message(message.from_user.id, f"Теперь бот использует {check_old_site and "старый" or "новый"} сайт")
+
+    print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - switch site")
+    query(f"INSERT INTO `schedule_log` (`time`, `name`, `telegram_id`, `log`) VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'switch site')")
+@bot.message_handler(commands = ['checksite'])
+def checksite(message):
+    if(tech_jobs and message.from_user.id != 5613054609):
+        return bot.send_message(message.from_user.id, f"Бот временно на тех. работах, подождите пожалуйста")
+    
+    global check_old_site
+    bot.send_message(message.from_user.id, f"Бот использует {check_old_site and "старый" or "новый"} сайт")
+
+    print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - check site")
+    query(f"INSERT INTO `schedule_log` (`time`, `name`, `telegram_id`, `log`) VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'check site')")
 
 @bot.message_handler(content_types=['text'])
 def get_text_messages(message):
     if(tech_jobs and message.from_user.id != 5613054609):
         return bot.send_message(message.from_user.id, f"Бот временно на тех. работах, подождите пожалуйста")
     if message.text == 'Посмотреть расписание':
-        schedule.clear()
-        days.clear()
-        groups.clear()
+        clearData()
         current_date = datetime.now().strftime('%d.%m.%Y')
 
-        request = f"SELECT `group_id` FROM `schedule_users` WHERE `telegram_id` = '{message.from_user.id}'"
-        cursor.execute(request)
-        rows = cursor.fetchall()
+        rows = checkGroup(message.from_user)
         if(rows):
             for data in rows:
-                response = requests.get(f'https://journal.zifra42.ru/site/schedule?group_id={data[0]}&day={current_date}&onlyMine=')
-                parser = MyHTMLParser()
-                parser.feed(response.text)
+                
+                if check_old_site:
+                    getInfoFromOldSite(data[0], current_date)
+                else:
+                    response = requests.get(f'https://zifra42.ru/%D1%8D%D0%BB%D0%B5%D0%BA%D1%82%D1%80%D0%BE%D0%BD%D0%BD%D0%BE%D0%B5-%D0%BE%D0%B1%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D0%B5/%D1%80%D0%B0%D1%81%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5/')
+                    parser = MyHTMLParser()
+                    parser.feed(response.text)
 
-                buttons = []
-                for button in days:
-                    buttons.append(types.KeyboardButton(text=button))
-
-                keyboard = types.InlineKeyboardMarkup()
-                btns_in_row = 1
-                keyboard.row_width = btns_in_row
-                btn_count = len(buttons)
-                row_count = btn_count//btns_in_row
-                for i in range(row_count):
-                    btn_list = []
-                    for N in range(btns_in_row):
-                        btn = types.InlineKeyboardButton(days[i], callback_data = days[i])
-                        btn_list.append(btn)
-                    keyboard.row(*btn_list)
-
-                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-                btn1 = types.KeyboardButton("Посмотреть расписание")
-                btn2 = types.KeyboardButton("Изменить группу")
-                markup.add(btn1, btn2)
+                keyboard = buttonsDay()
 
                 bot.send_message(message.from_user.id, 'Выберите дату', reply_markup=keyboard)
-                ccurrent_date = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
 
-                print(f"[{ccurrent_date}] user: {message.from_user.username} (id: {message.from_user.id}) - show days")
+                print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - show days")
                 query(f"INSERT INTO `schedule_log` (`time`, `name`, `telegram_id`, `log`) VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'show days')")
 
-                schedule.clear()
-                days.clear()
-                groups.clear()
+                clearData()
         else:
             bot.send_message(message.from_user.id, 'Вы еще не выбрали группу.')
 
     elif message.text == 'Изменить группу':
-        schedule.clear()
-        days.clear()
-        groups.clear()
-
-        current_date = datetime.now().strftime('%d.%m.%Y')
-        response = requests.get(f'https://journal.zifra42.ru/site/schedule?group_id=0&day={current_date}&onlyMine=')
-        parser = MyHTMLParser()
-        parser.feed(response.text)
-
-        keyboard = types.InlineKeyboardMarkup()
-        btns_in_row = 3
-        keyboard.row_width = btns_in_row
-        btn_count = len(groups)
-        btn_list = []
-        for i in range(0, btn_count, 3):
-            btn_list = []
-            for n in range(3):
-                if(i+n >= btn_count):
-                    break
-                btn = types.InlineKeyboardButton(groups[i+n][1], callback_data = f"select group {groups[i+n][0]}")
-                btn_list.append(btn)
-            keyboard.row(*btn_list)
-        bot.send_message(message.from_user.id, "☺️Выбери группу нажав на кнопку ниже", reply_markup=keyboard)
+        selectNewGroup(message.from_user)
     elif re.search(r"^\d{2}\.\d{2}\.\d{4}$", message.text):
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        btn1 = types.KeyboardButton("Посмотреть расписание")
-        btn2 = types.KeyboardButton("Изменить группу")
-        markup.add(btn1, btn2)
-
-        schedule.clear()
-        days.clear()
-        groups.clear()
-
-        request = f"SELECT `group_id` FROM `schedule_users` WHERE `telegram_id` = '{message.from_user.id}'"
-        cursor.execute(request)
-        rows = cursor.fetchall()
+        markup = addMainButtons()
+        clearData()
+        rows = checkGroup(message.from_user)
         if(rows):
             for data in rows:
                 day = message.text[:2]
                 month = message.text[3:5]
                 year = message.text[6:]
+                if check_old_site:
+                    getInfoFromOldSite(data[0], message.text)
+                else:
+                    payload = {
+                        "DateShedule": f"{year}-{month}-{day}",
+                        "Group": data[0],
+                    }
+                    getSchedule(payload)
+                            
                 date = datetime(int(year), int(month), int(day)).strftime('%A, %d.%m.%Y')
-
-                response = requests.get(f'https://journal.zifra42.ru/site/schedule?group_id={data[0]}&day={message.text}&onlyMine=')
-                parser = MyHTMLParser()
-                parser.feed(response.text)
-                bot.send_message(message.from_user.id, print_string(date), parse_mode="HTML")
-                current_date = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-                print(f"[{current_date}] user: {message.from_user.username} (id: {message.from_user.id}) - input date")
+                bot.send_message(message.from_user.id, print_string(date), parse_mode="HTML", reply_markup=markup)
+                print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - input date")
                 query(f"INSERT INTO `schedule_log` (`time`, `name`, `telegram_id`, `log`) VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'input date')")
 
-                schedule.clear()
-                days.clear()
-                groups.clear()
+                clearData()
         else:
             bot.send_message(message.from_user.id, 'Вы еще не выбрали группу.')
-    # elif(message.text == 'mtest'):
-        # request = f"SELECT * FROM `schedule_users`"
-        # cursor.execute(request)
-        # rows = cursor.fetchall()
-        # if(rows):
-        #     for data in rows:
-        #         userid = data[1]
-        #         UsrInfo = bot.get_chat_member(userid, userid).user
-        #         query(f"UPDATE `schedule_users` SET `user_name`='{UsrInfo.username}' WHERE `telegram_id`='{userid}'")
-
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -273,67 +253,151 @@ def callback_day(call):
         return bot.send_message(call.message.chat.id, f"Бот временно на тех. работах, подождите пожалуйста")
     text = call.data
     
-    ccurrent_date = datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-    if(re.search(r'select group \d+', text)):
+    if(re.search(r'select group +', text)):
         gid = text[13:]
-        request = f"SELECT `group_id` FROM `schedule_users` WHERE `telegram_id` = '{call.message.chat.id}'"
-        cursor.execute(request)
-        rows = cursor.fetchall()
+        rows = rows = checkGroup(call.message.chat)
         if(rows):
-            query(f"UPDATE `schedule_users` SET `group_id`='{gid}' WHERE `telegram_id`='{call.message.chat.id}'")
+            query(f"UPDATE `schedule_users` SET `{check_old_site and 'group_id' or 'group_string'}`='{gid}' WHERE `telegram_id`='{call.message.chat.id}'")
         else:
-            query(f"INSERT INTO `schedule_users` (`telegram_id`, `group_id`, `user_name`) VALUES ('{call.message.chat.id}', '{gid}', '{call.message.chat.username}')")
+            query(f"INSERT INTO `schedule_users` (`telegram_id`, `{check_old_site and 'group_id' or 'group_string'}`, `user_name`) VALUES ('{call.message.chat.id}', '{gid}', '{call.message.chat.username}')")
 
-        
         current_date = datetime.now().strftime('%d.%m.%Y')
-        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-        btn1 = types.KeyboardButton("Посмотреть расписание")
-        btn2 = types.KeyboardButton("Изменить группу")
-        markup.add(btn1, btn2)
+        markup = addMainButtons()
         bot.send_message(call.message.chat.id, f"👍Ты успешно выбрал(-а) свою группу.\n👌Нажми на кнопку \"Посмотреть расписание\", или введи дату.\nПример: {current_date}", reply_markup=markup)
         
-        print(f"[{ccurrent_date}] user: {call.message.chat.username} (id: {call.message.chat.id}) - select group")
+        print(f"[{getCurrentTime()}] user: {call.message.chat.username} (id: {call.message.chat.id}) - select group")
         query(f"INSERT INTO `schedule_log` (`time`, `name`, `telegram_id`, `log`) VALUES (NOW(), '{call.message.chat.username}', '{call.message.chat.id}', 'select group')")
     else:
-        request = f"SELECT `group_id` FROM `schedule_users` WHERE `telegram_id` = '{call.message.chat.id}'"
-        cursor.execute(request)
-        rows = cursor.fetchall()
+        rows = checkGroup(call.message.chat)
+        markup = addMainButtons()
         if(rows):
+            date = check_old_site and text[3:] or text
+            day = date[:2]
+            month = date[3:5]
+            year = date[6:]
             for data in rows:
-                markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
-                btn1 = types.KeyboardButton("Посмотреть расписание")
-                btn2 = types.KeyboardButton("Изменить группу")
-                markup.add(btn1, btn2)
+                clearData()
+                if check_old_site:
+                    if(int(data[0]) > 0):
+                        if(re.search(r"^\D{2}\s*\d{2}\.\d{2}\.\d{4}$", text)):
+                            getInfoFromOldSite(data[0], date)
+                            date = datetime(int(year), int(month), int(day)).strftime('%A, %d.%m.%Y')
+                            bot.send_message(call.message.chat.id, print_string(date), parse_mode="HTML", reply_markup=markup)
+                    else:
+                        selectNewGroup(call.message.chat)
+                else:
+                    if(len(str(data[0])) > 0):
+                        if(re.search(r"^\s*\d{2}\.\d{2}\.\d{4}$", text)):
+                            payload = {
+                                "DateShedule": f"{year}-{month}-{day}",
+                                "Group": data[0],
+                            }
+                            getSchedule(payload)
+                            date = datetime(int(year), int(month), int(day)).strftime('%A, %d.%m.%Y')
+                            bot.send_message(call.message.chat.id, print_string(date), parse_mode="HTML", reply_markup=markup)
+                    else:
+                        selectNewGroup(call.message.chat)
 
-                schedule.clear()
-                days.clear()
-                groups.clear()
-                date = text[3:]
-                response = requests.get(f'https://journal.zifra42.ru/site/schedule?group_id={data[0]}&day={date}&onlyMine=')
-                parser = MyHTMLParser()
-                parser.feed(response.text)
-
-                day = date[:2]
-                month = date[3:5]
-                year = date[6:]
-                date = datetime(int(year), int(month), int(day)).strftime('%A, %d.%m.%Y')
-
-                bot.send_message(call.message.chat.id, print_string(date), parse_mode="HTML")
-                print(f"[{ccurrent_date}] user: {call.message.chat.username} (id: {call.message.chat.id}) - select day")
+                print(f"[{getCurrentTime()}] user: {call.message.chat.username} (id: {call.message.chat.id}) - select day")
                 query(f"INSERT INTO `schedule_log` (`time`, `name`, `telegram_id`, `log`) VALUES (NOW(), '{call.message.chat.username}', '{call.message.chat.id}', 'select day')")
         else:
             bot.send_message(call.message.chat.id, 'Вы еще не выбрали группу.')
 
-    schedule.clear()
-    days.clear()
-    groups.clear()
+    clearData()
 
 def query(request):
     cursor.execute(request)
     connection.commit()
 
+def checkGroup(message):
+    request = f"SELECT `{check_old_site and 'group_id' or 'group_string'}` FROM `schedule_users` WHERE `telegram_id` = '{message.id}'"
+    cursor.execute(request)
+    rows = cursor.fetchall()
+    return rows
+
+def buttonGroups():
+    keyboard = types.InlineKeyboardMarkup()
+    btns_in_row = 3
+    keyboard.row_width = btns_in_row
+    btn_count = len(groups)
+    btn_list = []
+    for i in range(0, btn_count, 3):
+        btn_list = []
+        for n in range(3):
+            if(i+n >= btn_count):
+                break
+            btn = types.InlineKeyboardButton(groups[i+n][1], callback_data = f"select group {groups[i+n][0]}")
+            btn_list.append(btn)
+        keyboard.row(*btn_list)
+    return keyboard
+
+def buttonsDay():
+    buttons = []
+    for button in days:
+        buttons.append(types.KeyboardButton(text=button))
+    keyboard = types.InlineKeyboardMarkup()
+    btns_in_row = 1
+    keyboard.row_width = btns_in_row
+    btn_count = len(buttons)
+    row_count = btn_count//btns_in_row
+    for i in range(row_count):
+        btn_list = []
+        for N in range(btns_in_row):
+            btn = types.InlineKeyboardButton(days[i], callback_data = days[i])
+            btn_list.append(btn)
+        keyboard.row(*btn_list)
+    return keyboard
+
+def getInfoFromOldSite(group, date):
+    response = requests.get(f'https://journal.zifra42.ru/site/schedule?group_id={group}&day={date}')
+    parser = MyHTMLParser()
+    parser.feed(response.text)
+
+
+def getGroupList():
+    if check_old_site:
+        current_date = datetime.now().strftime('%d.%m.%Y')
+        getInfoFromOldSite(0, current_date)
+    else:
+        response = requests.post(f'https://j.zifra42.ru/rasp/aftertomorow/')
+        response.encoding = 'utf8'
+        parser = MyHTMLParser()
+        parser.feed(response.text)
+
+def selectNewGroup(message):
+    clearData()
+    getGroupList()
+    keyboard = buttonGroups()
+    bot.send_message(message.id, "☺️Выбери группу нажав на кнопку ниже", reply_markup=keyboard)
+
+def getSchedule(payload):
+    response = requests.post(f'https://j.zifra42.ru/rasp/tomorow/php/SheduleTable.php', data=payload)
+    parser = MyHTMLParser()
+    parser.feed(response.text)
+    table = etree.HTML(response.text).find("body/table")
+    rows = iter(table)
+    for row in rows:
+        values = [col.text for col in row]
+        if len(values[1]) == 1:
+            schedule.append([int(values[1]), values[3], values[4], values[5], int(values[2])])
+
+def addMainButtons():
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton("Посмотреть расписание")
+    btn2 = types.KeyboardButton("Изменить группу")
+    markup.add(btn1, btn2)
+    return markup
+
+def getCurrentTime():
+    return datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+
+def clearData():
+    schedule.clear()
+    days.clear()
+    groups.clear()
+
 if __name__ == '__main__':
     try:
         bot.infinity_polling(none_stop=True)
     except Exception as e:
-        time.sleep(15)
+        pass
