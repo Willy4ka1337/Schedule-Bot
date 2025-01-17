@@ -186,7 +186,7 @@ def checksite(message):
         return bot.send_message(message.from_user.id, f"Бот временно на тех. работах, подождите пожалуйста")
     
     global check_old_site
-    bot.send_message(message.from_user.id, f"Бот использует {check_old_site and "старый" or "новый"} сайт")
+    bot.send_message(message.from_user.id, f"Бот использует {check_old_site and 'старый' or 'новый'} сайт")
 
     print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - check site")
     query(f"INSERT INTO `schedule_log` (`time`, `name`, `telegram_id`, `log`) VALUES (NOW(), '{message.from_user.username}', '{message.from_user.id}', 'check site')")
