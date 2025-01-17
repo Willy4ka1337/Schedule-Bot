@@ -10,7 +10,7 @@ from lxml import etree
 import psycopg2
 
 global connection
-connection = psycopg2.connect("postgresql://root:S1k6aChqPHEnzHEYUWmEliHE1Zxf2430@dpg-cu57ei9u0jms73ffn9g0-a.oregon-postgres.render.com/schedule_bt89")
+connection = psycopg2.connect("postgresql://root:S1k6aChqPHEnzHEYUWmEliHE1Zxf2430@dpg-cu57ei9u0jms73ffn9g0-a/schedule_bt89")
 cursor = connection.cursor()
 
 locale.setlocale(locale.LC_ALL, '')
