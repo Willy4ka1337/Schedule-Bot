@@ -113,7 +113,7 @@ def print_string(date):
 ⏰ Время: {times[i[0]-1][0]} - {times[i[0]-1][1]}\n"
             if(not check_old_site):
                 if(i[4] > 0):
-                    string += f"💀 Подгруппа: {str(i[4])}\n"
+                    string += f"👥 Подгруппа: {str(i[4])}\n"
             if(len(i[1])>0):
                 string += f"📚 <b>Дисциплина: {i[1]}</b>\n"
             if(len(i[2])>0):
