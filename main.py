@@ -17,8 +17,6 @@ def main():
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.bind((HOST, PORT))
     server.listen()
-    client_socket, client_addr = socket.accept()
-    print(f"Connected to {client_addr} from {client_socket}")
 
 global connection
 connection = psycopg2.connect("postgresql://root:S1k6aChqPHEnzHEYUWmEliHE1Zxf2430@dpg-cu57ei9u0jms73ffn9g0-a/schedule_bt89")
