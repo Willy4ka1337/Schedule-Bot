@@ -8,18 +8,8 @@ import locale
 from lxml import etree
 import psycopg2
 
-from flask import Flask
-import os
-
-app = Flask(__name__)
-port = int(os.environ.get("PORT", 4000))
-
-@app.route('/')
-def home():
-    return "Welcome to the Flask application!"
-
 global connection
-connection = psycopg2.connect("postgresql://root:S1k6aChqPHEnzHEYUWmEliHE1Zxf2430@dpg-cu57ei9u0jms73ffn9g0-a/schedule_bt89")
+connection = psycopg2.connect("postgresql://root:S1k6aChqPHEnzHEYUWmEliHE1Zxf2430@dpg-cu57ei9u0jms73ffn9g0-a.oregon-postgres.render.com/schedule_bt89")
 cursor = connection.cursor()
 
 locale.setlocale(locale.LC_ALL, '')
@@ -402,7 +392,6 @@ def clearData():
     groups.clear()
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=port)
     try:
         bot.infinity_polling(none_stop=True)
     except Exception as e:
