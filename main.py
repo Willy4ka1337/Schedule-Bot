@@ -198,7 +198,6 @@ def get_text_messages(message):
                     getInfoFromOldSite(data[0], current_date)
                 else:
                     response = requests.get(f'https://zifra42.ru/%D1%8D%D0%BB%D0%B5%D0%BA%D1%82%D1%80%D0%BE%D0%BD%D0%BD%D0%BE%D0%B5-%D0%BE%D0%B1%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D0%B5/%D1%80%D0%B0%D1%81%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5/')
-                    requests.get('https://schedule-bot-iyku.onrender.com/')
                     parser = MyHTMLParser()
                     parser.feed(response.text)
 
@@ -346,7 +345,6 @@ def buttonsDay():
 
 def getInfoFromOldSite(group, date):
     response = requests.get(f'https://journal.zifra42.ru/site/schedule?group_id={group}&day={date}')
-    requests.get('https://schedule-bot-iyku.onrender.com/')
     parser = MyHTMLParser()
     parser.feed(response.text)
 
@@ -357,7 +355,6 @@ def getGroupList():
         getInfoFromOldSite(0, current_date)
     else:
         response = requests.post(f'https://j.zifra42.ru/rasp/aftertomorow/')
-        requests.get('https://schedule-bot-iyku.onrender.com/')
         response.encoding = 'utf8'
         parser = MyHTMLParser()
         parser.feed(response.text)
@@ -370,7 +367,6 @@ def selectNewGroup(message):
 
 def getSchedule(payload):
     response = requests.post(f'https://j.zifra42.ru/rasp/tomorow/php/SheduleTable.php', data=payload)
-    requests.get('https://schedule-bot-iyku.onrender.com/')
     parser = MyHTMLParser()
     parser.feed(response.text)
     table = etree.HTML(response.text).find("body/table")
@@ -398,5 +394,7 @@ def clearData():
 if __name__ == '__main__':
     try:
         bot.infinity_polling(none_stop=True)
+        if datetime.now().second == 0:
+            requests.get('https://schedule-bot-iyku.onrender.com/')
     except Exception as e:
         pass
