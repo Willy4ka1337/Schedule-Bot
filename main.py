@@ -11,7 +11,7 @@ import psycopg2
 
 import socket
 server = socket.socket() 
-server.bind(("0.0.0.0", 1337))
+server.bind(("0.0.0.0", 3000))
 server.listen(4) 
 client_socket, client_address = server.accept()
 print(client_address, "has connected")
