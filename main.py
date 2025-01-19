@@ -29,7 +29,7 @@ times = [
 numbers = ['1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','6️⃣']
 groups = []
 
-tech_jobs = True
+tech_jobs = False
 
 check_old_site = True
 
