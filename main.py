@@ -13,7 +13,7 @@ connection = psycopg2.connect("postgresql://root:S1k6aChqPHEnzHEYUWmEliHE1Zxf243
 cursor = connection.cursor()
 
 locale.setlocale(locale.LC_ALL, '')
-bot = telebot.TeleBot('7460665722:AAHsE1SLqF_fAWh86uBC2m6sHiXoNMPLWb8')
+bot = telebot.TeleBot('7460665722:AAEobn7bHcChGKsKc8u4WzNedJ7yUMTk3_U')
 
 schedule = []
 days = []
