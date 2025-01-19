@@ -12,7 +12,7 @@ global connection
 connection = psycopg2.connect("postgresql://root:S1k6aChqPHEnzHEYUWmEliHE1Zxf2430@dpg-cu57ei9u0jms73ffn9g0-a.oregon-postgres.render.com/schedule_bt89")
 cursor = connection.cursor()
 
-locale.setlocale(locale.LC_ALL, 'ru_RU')
+locale.setlocale(locale.LC_ALL, ('ru_RU', 'UTF-8'))
 bot = telebot.TeleBot('7460665722:AAHsE1SLqF_fAWh86uBC2m6sHiXoNMPLWb8')
 
 schedule = []
