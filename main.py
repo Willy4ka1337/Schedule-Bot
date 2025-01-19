@@ -396,5 +396,6 @@ if __name__ == '__main__':
         bot.infinity_polling(none_stop=True)
         if datetime.now().second == 0:
             requests.get('https://schedule-bot-iyku.onrender.com/')
+            print('send request')
     except Exception as e:
         pass
