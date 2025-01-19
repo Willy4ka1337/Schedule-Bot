@@ -7,6 +7,7 @@ from telebot import types
 import locale
 from lxml import etree
 import psycopg2
+import time
 
 global connection
 connection = psycopg2.connect("postgresql://root:S1k6aChqPHEnzHEYUWmEliHE1Zxf2430@dpg-cu57ei9u0jms73ffn9g0-a.oregon-postgres.render.com/schedule_bt89")
@@ -197,9 +198,11 @@ def get_text_messages(message):
                 if check_old_site:
                     getInfoFromOldSite(data[0], current_date)
                 else:
-                    response = requests.get(f'https://zifra42.ru/%D1%8D%D0%BB%D0%B5%D0%BA%D1%82%D1%80%D0%BE%D0%BD%D0%BD%D0%BE%D0%B5-%D0%BE%D0%B1%D1%83%D1%87%D0%B5%D0%BD%D0%B8%D0%B5/%D1%80%D0%B0%D1%81%D0%BF%D0%B8%D1%81%D0%B0%D0%BD%D0%B8%D0%B5/')
-                    parser = MyHTMLParser()
-                    parser.feed(response.text)
+                    unix = datetime.now().timestamp()
+                    for i in range(3):
+                        struct = time.gmtime(unix+i*84000)
+                        if struct.tm_wday != 6:
+                            days.append("%04d-%02d-%02d" % (struct.tm_year, struct.tm_mon, struct.tm_mday))
 
                 keyboard = buttonsDay()
 
@@ -282,12 +285,15 @@ def callback_day(call):
                         selectNewGroup(call.message.chat)
                 else:
                     if(len(str(data[0])) > 0):
-                        if(re.search(r"^\s*\d{2}\.\d{2}\.\d{4}$", text)):
+                        if(re.search(r"^\s*\d{4}\-\d{2}\-\d{2}$", text)):
                             payload = {
-                                "DateShedule": f"{year}-{month}-{day}",
+                                "DateShedule": date,
                                 "Group": data[0],
                             }
                             getSchedule(payload)
+                            year = date[:4]
+                            month = date[5:7]
+                            day = date[8:]
                             date = datetime(int(year), int(month), int(day)).strftime('%A, %d.%m.%Y')
                             bot.send_message(call.message.chat.id, print_string(date), parse_mode="HTML", reply_markup=markup)
                     else:
