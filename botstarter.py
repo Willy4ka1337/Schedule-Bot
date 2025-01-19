@@ -1,2 +1,2 @@
 import os
-os.startfile('main.py')
+os.system('start main.py')
