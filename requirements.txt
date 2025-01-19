@@ -17,7 +17,6 @@ mysql-connector==2.2.9
 mysqlclient==2.2.6
 numpy==2.2.1
 pandas==2.2.3
-psycopg2==2.9.10
 psycopg2-binary==2.9.10
 pycparser==2.22
 pyTelegramBotAPI==4.25.0
