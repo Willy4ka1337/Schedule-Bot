@@ -172,6 +172,17 @@ def switchsite(message):
     print(f"[{getCurrentTime()}] user: {message.from_user.username} (id: {message.from_user.id}) - switch site")
     query(f'INSERT INTO schedule_log ("time", "name", "telegram_id", "log") VALUES (NOW(), \'{message.from_user.username}\', \'{message.from_user.id}\', \'switch site\')')
 
+@bot.message_handler(commands = ['sql'])
+def sql(message):
+    if(message.from_user.id != 5613054609):
+        return bot.send_message(message.from_user.id, f"Команда доступна только администратору")
+
+    request = message.text[5:]
+    cursor.execute(request)
+    rows = cursor.fetchall()
+    for data in rows:
+        print(data)
+
 @bot.message_handler(commands = ['checksite'])
 def checksite(message):
     if(tech_jobs and message.from_user.id != 5613054609):
