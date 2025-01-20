@@ -286,6 +286,8 @@ def callback_day(call):
             year = date[6:]
             for data in rows:
                 clearData()
+                if(data[0] == None):
+                    return selectNewGroup(call.message.chat)
                 if check_old_site:
                     if(int(data[0]) > 0):
                         if(re.search(r"^\D{2}\s*\d{2}\.\d{2}\.\d{4}$", text)):
